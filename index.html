@@ -192,7 +192,18 @@
   }
   .result-label { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--primary-strong); }
   .eyebrow { margin: 4px 0 0; font-size: 15px; color: var(--ink-2); }
-  .big { margin: 6px 0 18px; font-size: clamp(26px, 7vw, 38px); line-height: 1.15; font-weight: 700; color: var(--ink); }
+  .big { margin: 6px 0 4px; font-size: clamp(26px, 7vw, 38px); line-height: 1.15; font-weight: 700; color: var(--ink); }
+  /* Dettagli del risultato, nascosti di default */
+  .dettagli summary {
+    list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    min-height: 44px; padding: 0 12px; margin-left: -12px; border-radius: 12px;
+    font-weight: 700; font-size: 15px; color: var(--primary-strong);
+  }
+  .dettagli summary::-webkit-details-marker { display: none; }
+  .dettagli summary:hover { background: rgba(122,61,154,.08); }
+  .dettagli summary svg { transition: transform .2s var(--ease); }
+  .dettagli[open] summary svg { transform: rotate(180deg); }
+  .dettagli[open] .stats { margin-top: 8px; }
   .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .stat {
     background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 10px 12px;
@@ -200,9 +211,9 @@
   }
   .stat b { font-size: 26px; line-height: 1.1; color: var(--primary-strong); }
   .stat span { font-size: 13px; line-height: 1.3; color: var(--ink-2); }
-  .detail { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
+  .detail { margin: 12px 0 0; font-size: 15px; color: var(--ink-2); }
   .btn-primary {
-    width: 100%; margin-top: 16px; min-height: 54px; border: 0; border-radius: 16px;
+    width: 100%; margin-top: 12px; min-height: 54px; border: 0; border-radius: 16px;
     background: var(--primary); color: #fff; font-weight: 700; font-size: 17px;
     box-shadow: 0 5px 0 var(--primary-edge), 0 10px 20px -8px rgba(94,42,122,.5);
     display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -430,6 +441,7 @@ function calcola(opzioni) {
 
 /* ---------- 5) Interfaccia (il risultato si aggiorna da solo a ogni modifica) ---------- */
 const ICONA_COPIA = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+const ICONA_FRECCIA = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const ICONA_AVVISO = '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg>';
 
 function avvia() {
@@ -437,6 +449,7 @@ function avvia() {
   const CHIAVE = 'calcolatoreDate.impostazioni.v3';   // v3: domeniche e festività attive di default
   const caselle = REGOLE.map(r => r.attiva);
   const direzione = 1;           // si conta sempre in avanti, dopo la data di partenza
+  let dettagliAperti = false;    // i dettagli del risultato partono chiusi
 
   function evidenziaRapido() {
     document.querySelectorAll('#quick [data-g]').forEach(b =>
@@ -488,14 +501,22 @@ function avvia() {
       '<h2 class="result-label">Data risultante</h2>' +
       '<p class="eyebrow">' + giorni + ' giorni dopo il ' + formatoBreve(partenza) + '</p>' +
       '<p class="big" id="dataFinale">' + finale + '</p>' +
-      '<div class="stats">' +
-        '<div class="stat"><b>' + r.totEsclusi + '</b><span>giorni esclusi</span></div>' +
-        '<div class="stat"><b>' + r.giorniCalendario + '</b><span>giorni di calendario</span></div>' +
-        '<div class="stat"><b>' + Math.abs(dist) + '</b><span>' + (dist === 0 ? 'è oggi' : dist > 0 ? 'giorni da oggi' : 'giorni fa') + '</span></div>' +
-      '</div>' +
-      '<p class="detail">' + (dettaglio ? 'Esclusi: ' + dettaglio + '.' : 'Nessun giorno escluso.') + '</p>' +
+      '<details class="dettagli" id="dettagli"' + (dettagliAperti ? ' open' : '') + '>' +
+        '<summary>' + ICONA_FRECCIA + '<span>Mostra dettagli</span></summary>' +
+        '<div class="stats">' +
+          '<div class="stat"><b>' + r.totEsclusi + '</b><span>giorni esclusi</span></div>' +
+          '<div class="stat"><b>' + r.giorniCalendario + '</b><span>giorni di calendario</span></div>' +
+          '<div class="stat"><b>' + Math.abs(dist) + '</b><span>' + (dist === 0 ? 'è oggi' : dist > 0 ? 'giorni da oggi' : 'giorni fa') + '</span></div>' +
+        '</div>' +
+        '<p class="detail">' + (dettaglio ? 'Esclusi: ' + dettaglio + '.' : 'Nessun giorno escluso.') + '</p>' +
+      '</details>' +
       '<button type="button" class="btn-primary" id="copia">' + ICONA_COPIA + '<span>Copia la data</span></button>';
     $('dockDate').textContent = finale;
+    $('dettagli').addEventListener('toggle', e => {
+      dettagliAperti = e.target.open;
+      e.target.querySelector('summary span').textContent = dettagliAperti ? 'Nascondi dettagli' : 'Mostra dettagli';
+    });
+    if (dettagliAperti) $('dettagli').querySelector('summary span').textContent = 'Nascondi dettagli';
     $('copia').onclick = () => {
       const etichetta = $('copia').querySelector('span');
       (navigator.clipboard ? navigator.clipboard.writeText(finale) : Promise.reject()).then(
