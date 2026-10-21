@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f2f9">
+<title>Calcolatore di date</title>
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Atkinson Hyperlegible: carattere progettato per la massima leggibilità -->
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ Colori (dal logo Welfare Academy Italia) e misure ============ */
+  :root {
+    --bg: #f5f2f9;
+    --surface: #ffffff;
+    --ink: #1b1530;            /* testo principale */
+    --ink-2: #4a4458;          /* testo secondario (contrasto 9:1 su bianco) */
+    --line: #e4dcea;
+
+    --primary: #7a3d9a;        /* viola del logo */
+    --primary-strong: #5e2a7a;
+    --primary-edge: #4b1f63;
+    --primary-soft: #f3e6fa;
+    --primary-soft-edge: #dcc6ea;
+
+    --accent: #d4a12a;         /* giallo ocra: secondo colore */
+    --accent-ink: #3a2700;     /* testo scuro su ocra (contrasto alto) */
+    --accent-edge: #8f6a12;
+    --accent-soft: #fbf0d4;
+    --accent-soft-edge: #ead08c;
+
+
+    --error: #b3261e;
+    --error-soft: #fdecea;
+
+    --focus: #1b1530;
+    --radius: 20px;
+    --radius-sm: 14px;
+
+    /* profondità "3D": bordo solido sotto (spessore) + ombre morbide (distanza) */
+    --edge-card: 0 6px 0 #e2d7ea;
+    --shadow-card: 0 1px 2px rgba(40,20,60,.06), 0 10px 20px -6px rgba(60,30,90,.14), 0 26px 48px -18px rgba(60,30,90,.22);
+    --ease: cubic-bezier(.2,.7,.2,1);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px; line-height: 1.5;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .skip { position: absolute; left: 16px; top: -60px; z-index: 20; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; text-decoration: none; font-weight: 700; }
+  .skip:focus { top: 12px; }
+
+  /* ============ Barra superiore ============ */
+  .topbar { padding: calc(14px + env(safe-area-inset-top)) 16px 14px; }
+  .topbar .in { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 52px; height: 52px; border-radius: 50%; flex: none; background: #fff;
+    box-shadow: 0 4px 0 #e2d7ea, 0 8px 18px -6px rgba(60,30,90,.3);
+  }
+  .topbar h1 { margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; color: var(--ink); }
+  .topbar p { margin: 2px 0 0; font-size: 14px; color: var(--ink-2); }
+
+  /* ============ Disposizione ============ */
+  .layout {
+    max-width: 1080px; margin: 0 auto;
+    padding: 4px 16px calc(24px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  @media (min-width: 900px) {
+    .layout { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: start; gap: 32px; padding-top: 12px; }
+    .result { grid-column: 2; grid-row: 1; position: sticky; top: 24px; }
+    .col { grid-column: 1; grid-row: 1; }
+  }
+
+  /* ============ Schede 3D ============ */
+  .card3d {
+    --rx: 0deg; --ry: 0deg; --lift: 0px;
+    position: relative;
+    transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+    transform-style: preserve-3d;
+    transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  }
+  .card3d.is-hover { --lift: -4px; transition: transform .12s linear, box-shadow .35s var(--ease); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 16px 18px; box-shadow: var(--edge-card), var(--shadow-card);
+  }
+  .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .badge {
+    width: 34px; height: 34px; border-radius: 10px; flex: none;
+    display: grid; place-items: center; font-weight: 700; font-size: 17px;
+    background: var(--primary); color: #fff; box-shadow: 0 3px 0 var(--primary-edge);
+  }
+  .badge.ocra { background: var(--accent); color: var(--accent-ink); box-shadow: 0 3px 0 var(--accent-edge); }
+  .card-head h2 { margin: 0; font-size: 18px; line-height: 1.25; }
+  .card-head p { margin: 1px 0 0; font-size: 14px; color: var(--ink-2); }
+
+  /* ============ Campi ============ */
+  /* data e giorni sulla stessa riga */
+  .row2 { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 10px; margin-bottom: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 30px; }
+  .field label { font-weight: 700; font-size: 15px; color: var(--ink); }
+  .input {
+    width: 100%; min-height: 52px; padding: 0 10px; font-size: 16px;
+    background: #fff; border: 2px solid #8d8399; border-radius: var(--radius-sm);
+    box-shadow: inset 0 2px 0 rgba(40,20,60,.05);
+  }
+  .input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(122,61,154,.22); }
+  .link-btn {
+    min-height: 44px; margin: -7px -8px -7px 0; padding: 0 8px; border: 0; background: transparent; border-radius: 10px;
+    color: var(--primary-strong); font-weight: 700; font-size: 15px; text-decoration: underline; text-underline-offset: 3px;
+  }
+  .link-btn:hover { background: var(--primary-soft); }
+
+  /* Stepper − numero + */
+  .stepper { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; gap: 6px; }
+  .stepper .tactile { min-height: 52px; padding: 0; }
+  .stepper .input { padding: 0 4px; text-align: center; font-weight: 700; font-size: 19px; -moz-appearance: textfield; }
+  .stepper .input::-webkit-outer-spin-button, .stepper .input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* Pulsanti "tattili" con spessore */
+  .tactile {
+    min-height: 52px; border-radius: var(--radius-sm); border: 1px solid var(--line);
+    background: #fff; color: var(--ink); font-weight: 700; font-size: 17px;
+    box-shadow: 0 4px 0 #ddd2e6; transform: translateY(0);
+    transition: transform .12s var(--ease), box-shadow .12s var(--ease), background .2s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .tactile:hover { background: #faf7fc; }
+  .tactile:active { transform: translateY(3px); box-shadow: 0 1px 0 #ddd2e6; }
+  .tactile svg { flex: none; }
+
+  /* Scelte rapide: più piccole, tutte su una riga */
+  .quick { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .quick .tactile { min-height: 44px; font-size: 15px; border-radius: 12px; box-shadow: 0 3px 0 #ddd2e6; }
+  .quick .tactile:active { box-shadow: 0 1px 0 #ddd2e6; }
+  .quick .tactile[aria-pressed="true"] {
+    background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-soft-edge); box-shadow: 0 3px 0 var(--accent-soft-edge);
+  }
+  .quick .tactile[aria-pressed="true"]:active { box-shadow: 0 1px 0 var(--accent-soft-edge); }
+
+  /* ============ Interruttori di esclusione ============ */
+  /* due interruttori per riga */
+  .switches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .hint { margin: 10px 0 0; font-size: 14px; color: var(--ink-2); }
+  .switch-row {
+    display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 8px 10px 8px 12px; min-width: 0;
+    border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; cursor: pointer;
+    box-shadow: 0 3px 0 #ebe3f0; transition: background .2s, border-color .2s, box-shadow .2s;
+  }
+  .switch-row:hover { background: #faf7fc; }
+  .switch-row:has(.sw-input:checked) { background: var(--primary-soft); border-color: var(--primary-soft-edge); box-shadow: 0 3px 0 var(--primary-soft-edge); }
+  .sw-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sw-title { font-weight: 700; font-size: 16px; }
+  .sw-desc { font-size: 14px; color: var(--ink-2); }
+  .sw-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .sw-track {
+    position: relative; flex: none; width: 52px; height: 32px; border-radius: 16px;
+    background: #d9d1df; border: 2px solid #8d8399; transition: background .2s, border-color .2s;
+  }
+  .sw-track::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.25); transition: transform .2s var(--ease);
+  }
+  .sw-input:checked + .sw-track { background: var(--primary); border-color: var(--primary); }
+  .sw-input:checked + .sw-track::after { transform: translateX(22px); }
+  .sw-input:focus-visible + .sw-track { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+  /* ============ Scheda risultato ============ */
+  .result {
+    background: linear-gradient(165deg, #ffffff 0%, var(--primary-soft) 100%);
+    border: 1px solid var(--primary-soft-edge); border-radius: 24px; padding: 22px 18px 20px;
+    /* spessore + seconda scheda "dietro" (ombra più stretta) + ombre morbide */
+    box-shadow: 0 8px 0 var(--primary-soft-edge), 0 20px 0 -8px #e9d9f3,
+                0 18px 30px -8px rgba(94,42,122,.28), 0 40px 64px -24px rgba(94,42,122,.38);
+  }
+  .result-label { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--primary-strong); }
+  .eyebrow { margin: 4px 0 0; font-size: 15px; color: var(--ink-2); }
+  .big { margin: 6px 0 18px; font-size: clamp(26px, 7vw, 38px); line-height: 1.15; font-weight: 700; color: var(--ink); }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .stat {
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 10px 12px;
+    box-shadow: 0 4px 0 #e6dcee; display: flex; flex-direction: column; min-width: 0;
+  }
+  .stat b { font-size: 26px; line-height: 1.1; color: var(--primary-strong); }
+  .stat span { font-size: 13px; line-height: 1.3; color: var(--ink-2); }
+  .detail { margin: 16px 0 0; font-size: 15px; color: var(--ink-2); }
+  .btn-primary {
+    width: 100%; margin-top: 16px; min-height: 54px; border: 0; border-radius: 16px;
+    background: var(--primary); color: #fff; font-weight: 700; font-size: 17px;
+    box-shadow: 0 5px 0 var(--primary-edge), 0 10px 20px -8px rgba(94,42,122,.5);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .12s var(--ease), box-shadow .12s var(--ease), background .2s;
+  }
+  .btn-primary:hover { background: var(--primary-strong); }
+  .btn-primary:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--primary-edge); }
+  .result.err { background: var(--error-soft); border-color: #f3c5c0; box-shadow: 0 8px 0 #f3c5c0, var(--shadow-card); }
+  .err-msg { margin: 8px 0 0; font-size: 17px; font-weight: 700; color: var(--error); display: flex; gap: 10px; align-items: flex-start; }
+
+  /* ============ Barra risultato fissa (solo telefono) ============ */
+  .dock {
+    position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 10;
+    display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px;
+    background: var(--accent); color: var(--accent-ink); border-radius: 18px;
+    box-shadow: 0 5px 0 var(--accent-edge), 0 16px 30px -10px rgba(90,60,0,.5);
+    transform: translateY(150%); transition: transform .3s var(--ease); visibility: hidden;
+  }
+  .dock.show { transform: translateY(0); visibility: visible; }
+  .dock div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .dock small { font-size: 13px; color: #4d3800; }
+  .dock strong { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dock button {
+    flex: none; min-height: 44px; padding: 0 16px; border: 0; border-radius: 12px;
+    background: #fff; color: var(--accent-ink); font-weight: 700;
+  }
+  @media (min-width: 900px) { .dock { display: none; } }
+
+  footer { padding: 8px 16px calc(96px + env(safe-area-inset-bottom)); text-align: center; font-size: 14px; color: var(--ink-2); }
+  footer strong { color: var(--ink); }
+  @media (min-width: 900px) { footer { padding-bottom: 32px; } }
+
+  @media (max-width: 360px) {
+    .row2 { grid-template-columns: minmax(0, 1fr); }
+    .stat b { font-size: 22px; }
+    .card { padding: 14px 12px 16px; }
+  }
+
+  /* Rispetta chi ha chiesto meno animazioni */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+    .card3d { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Vai al calcolatore</a>
+
+<header class="topbar">
+  <div class="in">
+    <!-- Per cambiare logo: sostituisci il file logo.png nella stessa cartella -->
+    <img class="logo" src="logo.png" alt="Logo Welfare Academy Italia" width="52" height="52" onerror="this.style.display='none'">
+    <div>
+      <h1>Calcolatore di date</h1>
+      <p>Welfare Academy Italia</p>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="layout">
+
+  <section class="card3d result" id="risultato" aria-live="polite" aria-atomic="true" data-tilt="5"></section>
+
+  <div class="col">
+
+    <section class="card3d card" aria-labelledby="t1" data-tilt="2">
+      <div class="card-head">
+        <span class="badge" aria-hidden="true">1</span>
+        <div>
+          <h2 id="t1">Data e intervallo</h2>
+          <p>Il conteggio parte dal giorno dopo</p>
+        </div>
+      </div>
+
+      <div class="row2">
+      <div class="field">
+        <div class="field-top">
+          <label for="dataPartenza">Data di partenza</label>
+          <button type="button" class="link-btn" id="oggi">Oggi</button>
+        </div>
+        <input class="input" type="date" id="dataPartenza">
+      </div>
+
+      <div class="field">
+        <div class="field-top"><label for="giorni">Giorni</label></div>
+        <div class="stepper">
+          <button type="button" class="tactile" id="meno" aria-label="Togli un giorno">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>
+          </button>
+          <input class="input" type="number" id="giorni" min="1" max="3650" value="90" inputmode="numeric">
+          <button type="button" class="tactile" id="piu" aria-label="Aggiungi un giorno">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>
+      </div>
+
+      <div class="quick" id="quick" role="group" aria-label="Scelte rapide del numero di giorni">
+        <button type="button" class="tactile" data-g="30" aria-pressed="false">30</button>
+        <button type="button" class="tactile" data-g="60" aria-pressed="false">60</button>
+        <button type="button" class="tactile" data-g="90" aria-pressed="false">90</button>
+        <button type="button" class="tactile" data-g="120" aria-pressed="false">120</button>
+        <button type="button" class="tactile" data-g="180" aria-pressed="false">180</button>
+      </div>
+    </section>
+
+    <section class="card3d card" aria-labelledby="t2" data-tilt="2">
+      <div class="card-head">
+        <span class="badge ocra" aria-hidden="true">2</span>
+        <div>
+          <h2 id="t2">Giorni da non contare</h2>
+          <p>Attiva le esclusioni che ti servono</p>
+        </div>
+      </div>
+
+      <div class="switches" role="group" aria-labelledby="t2">
+        <label class="switch-row">
+          <span class="sw-text"><span class="sw-title">Sabati</span><span class="sw-desc">Non contati</span></span>
+          <input type="checkbox" role="switch" class="sw-input" id="optSabato">
+          <span class="sw-track" aria-hidden="true"></span>
+        </label>
+        <label class="switch-row">
+          <span class="sw-text"><span class="sw-title">Domeniche</span><span class="sw-desc">Non contate</span></span>
+          <input type="checkbox" role="switch" class="sw-input" id="optDomenica" checked>
+          <span class="sw-track" aria-hidden="true"></span>
+        </label>
+        <label class="switch-row">
+          <span class="sw-text"><span class="sw-title">Agosto</span><span class="sw-desc">Tutto il mese</span></span>
+          <input type="checkbox" role="switch" class="sw-input" id="optAgosto">
+          <span class="sw-track" aria-hidden="true"></span>
+        </label>
+        <label class="switch-row">
+          <span class="sw-text"><span class="sw-title">Festività</span><span class="sw-desc">Nazionali e Pasqua</span></span>
+          <input type="checkbox" role="switch" class="sw-input" id="optFestivi" checked>
+          <span class="sw-track" aria-hidden="true"></span>
+        </label>
+      </div>
+      <p class="hint">Sabati + domeniche = solo giorni lavorativi.</p>
+    </section>
+
+  </div>
+</main>
+
+<div class="dock" id="dock">
+  <div><small>Data risultante</small><strong id="dockDate"></strong></div>
+  <button type="button" id="dockBtn">Vedi</button>
+</div>
+
+<footer>App creata da <strong>Marco Pappalardo</strong> · Welfare Academy Italia</footer>
+
+<script>
+/* =====================================================================
+   CALCOLATORE DI DATE — Welfare Academy Italia — creato da Marco Pappalardo
+   Struttura: 1) utilità date  2) festività  3) regole di esclusione
+              4) calcolo  5) interfaccia  6) effetto 3D
+   Per aggiungere una nuova opzione: aggiungi una voce in REGOLE (sezione 3)
+   e un interruttore nel HTML con lo stesso id (vedi "attiva").
+   ===================================================================== */
+
+/* ---------- 1) Utilità sulle date (sempre alle 12:00 locali: niente problemi di ora legale) ---------- */
+function creaData(anno, mese, giorno) { return new Date(anno, mese, giorno, 12, 0, 0); }
+function daISO(s) {            // "2026-10-21" -> Date
+  const [a, m, g] = s.split('-').map(Number);
+  return creaData(a, m - 1, g);
+}
+function inISO(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function aggiungiGiorni(d, n) { return creaData(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function differenzaGiorni(a, b) { return Math.round((b - a) / 86400000); }
+function formatoLungo(d) {
+  const s = d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function formatoBreve(d) { return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }); }
+
+/* ---------- 2) Festività italiane ---------- */
+function pasqua(anno) {        // algoritmo di Meeus/Jones/Butcher
+  const a = anno % 19, b = Math.floor(anno / 100), c = anno % 100;
+  const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mese = Math.floor((h + l - 7 * m + 114) / 31);
+  const giorno = ((h + l - 7 * m + 114) % 31) + 1;
+  return creaData(anno, mese - 1, giorno);
+}
+const FESTIVITA_FISSE = [
+  [0, 1, 'Capodanno'], [0, 6, 'Epifania'], [3, 25, 'Festa della Liberazione'],
+  [4, 1, 'Festa dei lavoratori'], [5, 2, 'Festa della Repubblica'], [7, 15, 'Ferragosto'],
+  [10, 1, 'Ognissanti'], [11, 8, 'Immacolata Concezione'], [11, 25, 'Natale'], [11, 26, 'Santo Stefano']
+];
+const cacheFestivi = {};
+function festiviAnno(anno) {   // { "2026-04-05": "Pasqua", ... }
+  if (cacheFestivi[anno]) return cacheFestivi[anno];
+  const m = {};
+  FESTIVITA_FISSE.forEach(([mese, giorno, nome]) => { m[inISO(creaData(anno, mese, giorno))] = nome; });
+  const p = pasqua(anno);
+  m[inISO(p)] = 'Pasqua';
+  m[inISO(aggiungiGiorni(p, 1))] = "Lunedì dell'Angelo";
+  return (cacheFestivi[anno] = m);
+}
+
+/* ---------- 3) Regole di esclusione ----------
+   Ogni regola: { attiva: id della casella, etichetta, esclude(data, opzioni) -> true se il giorno NON va contato } */
+const REGOLE = [
+  { attiva: 'optAgosto',   etichetta: 'agosto',            esclude: d => d.getMonth() === 7 },
+  { attiva: 'optSabato',   etichetta: 'sabati',            esclude: d => d.getDay() === 6 },
+  { attiva: 'optDomenica', etichetta: 'domeniche',         esclude: d => d.getDay() === 0 },
+  { attiva: 'optFestivi',  etichetta: 'festività',         esclude: d => !!festiviAnno(d.getFullYear())[inISO(d)] }
+];
+
+/* ---------- 4) Calcolo ----------
+   opzioni = { partenza: Date, giorni: n, direzione: 1|-1, attive: { optAgosto: true, ... } }
+   Il giorno di partenza non si conta: il conteggio comincia dal giorno successivo (o precedente). */
+function calcola(opzioni) {
+  const regole = REGOLE.filter(r => opzioni.attive[r.attiva]);
+  const esclusi = {};
+  let corrente = opzioni.partenza, contati = 0, passi = 0;
+  const LIMITE = 20000;
+  while (contati < opzioni.giorni) {
+    corrente = aggiungiGiorni(corrente, opzioni.direzione);
+    if (++passi > LIMITE) return { errore: 'Con queste esclusioni non è possibile raggiungere il numero di giorni richiesto.' };
+    const regola = regole.find(r => r.esclude(corrente, opzioni));
+    if (regola) esclusi[regola.etichetta] = (esclusi[regola.etichetta] || 0) + 1;
+    else contati++;
+  }
+  const totEsclusi = Object.values(esclusi).reduce((a, b) => a + b, 0);
+  return { data: corrente, giorniCalendario: passi, totEsclusi, esclusi };
+}
+
+/* ---------- 5) Interfaccia (il risultato si aggiorna da solo a ogni modifica) ---------- */
+const ICONA_COPIA = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+const ICONA_AVVISO = '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg>';
+
+function avvia() {
+  const $ = id => document.getElementById(id);
+  const CHIAVE = 'calcolatoreDate.impostazioni.v3';   // v3: domeniche e festività attive di default
+  const caselle = REGOLE.map(r => r.attiva);
+  const direzione = 1;           // si conta sempre in avanti, dopo la data di partenza
+
+  function evidenziaRapido() {
+    document.querySelectorAll('#quick [data-g]').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.g === $('giorni').value)));
+  }
+
+  function salva() {
+    try {
+      const s = { giorni: $('giorni').value };
+      caselle.forEach(id => s[id] = $(id).checked);
+      localStorage.setItem(CHIAVE, JSON.stringify(s));
+    } catch (e) { /* senza memoria locale l'app funziona comunque */ }
+  }
+  function carica() {
+    try {
+      const s = JSON.parse(localStorage.getItem(CHIAVE) || 'null');
+      if (!s) return;
+      if (s.giorni) $('giorni').value = s.giorni;
+      caselle.forEach(id => { if (id in s) $(id).checked = !!s[id]; });
+    } catch (e) { /* ignora */ }
+  }
+
+  function errore(msg) {
+    $('risultato').className = 'card3d result err';
+    $('risultato').innerHTML = '<h2 class="result-label">Controlla i dati</h2><p class="err-msg">' + ICONA_AVVISO + '<span></span></p>';
+    $('risultato').querySelector('.err-msg span').textContent = msg;
+    $('dockDate').textContent = 'Controlla i dati';
+  }
+
+  function esegui() {
+    const out = $('risultato');
+    const giorni = parseInt($('giorni').value, 10);
+    if (!$('dataPartenza').value) return errore('Inserisci una data di partenza.');
+    if (!(giorni >= 1)) return errore('Inserisci un numero di giorni maggiore di zero.');
+
+    const attive = {};
+    caselle.forEach(id => attive[id] = $(id).checked);
+    const partenza = daISO($('dataPartenza').value);
+    const r = calcola({ partenza, giorni, direzione, attive });
+    if (r.errore) return errore(r.errore);
+
+    const oggi = daISO(inISO(new Date()));
+    const dist = differenzaGiorni(oggi, r.data);
+    const dettaglio = Object.entries(r.esclusi).map(([k, v]) => v + ' ' + k).join(', ');
+    const finale = formatoLungo(r.data);
+
+    out.className = 'card3d result';
+    out.innerHTML =
+      '<h2 class="result-label">Data risultante</h2>' +
+      '<p class="eyebrow">' + giorni + ' giorni dopo il ' + formatoBreve(partenza) + '</p>' +
+      '<p class="big" id="dataFinale">' + finale + '</p>' +
+      '<div class="stats">' +
+        '<div class="stat"><b>' + r.totEsclusi + '</b><span>giorni esclusi</span></div>' +
+        '<div class="stat"><b>' + r.giorniCalendario + '</b><span>giorni di calendario</span></div>' +
+        '<div class="stat"><b>' + Math.abs(dist) + '</b><span>' + (dist === 0 ? 'è oggi' : dist > 0 ? 'giorni da oggi' : 'giorni fa') + '</span></div>' +
+      '</div>' +
+      '<p class="detail">' + (dettaglio ? 'Esclusi: ' + dettaglio + '.' : 'Nessun giorno escluso.') + '</p>' +
+      '<button type="button" class="btn-primary" id="copia">' + ICONA_COPIA + '<span>Copia la data</span></button>';
+    $('dockDate').textContent = finale;
+    $('copia').onclick = () => {
+      const etichetta = $('copia').querySelector('span');
+      (navigator.clipboard ? navigator.clipboard.writeText(finale) : Promise.reject()).then(
+        () => { etichetta.textContent = 'Data copiata'; },
+        () => { etichetta.textContent = 'Copia non riuscita'; });
+    };
+  }
+
+  function aggiorna() { evidenziaRapido(); salva(); esegui(); }
+
+  function cambiaGiorni(delta) {
+    const v = Math.min(3650, Math.max(1, (parseInt($('giorni').value, 10) || 0) + delta));
+    $('giorni').value = v;
+    aggiorna();
+  }
+
+  $('dataPartenza').value = inISO(new Date());
+  carica();
+
+  $('quick').addEventListener('click', e => {
+    const b = e.target.closest('[data-g]');
+    if (b) { $('giorni').value = b.dataset.g; aggiorna(); }
+  });
+  $('meno').onclick = () => cambiaGiorni(-1);
+  $('piu').onclick = () => cambiaGiorni(1);
+  $('oggi').onclick = () => { $('dataPartenza').value = inISO(new Date()); aggiorna(); };
+  caselle.forEach(id => $(id).addEventListener('change', aggiorna));
+  $('giorni').addEventListener('input', aggiorna);
+  $('dataPartenza').addEventListener('change', aggiorna);
+
+  /* Barra fissa sul telefono: compare quando la scheda del risultato esce dallo schermo */
+  $('dockBtn').onclick = () => {
+    $('risultato').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  };
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(([v]) => $('dock').classList.toggle('show', !v.isIntersecting && v.boundingClientRect.top < 0))
+      .observe($('risultato'));
+  }
+
+  aggiorna();
+  attivaEffetto3D();
+}
+
+/* ---------- 6) Effetto 3D: le schede si inclinano seguendo il mouse (solo computer, mai con "riduci movimento") ---------- */
+function attivaEffetto3D() {
+  const mouse = matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const calma = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!mouse || calma) return;
+  document.querySelectorAll('.card3d').forEach(el => {
+    const max = parseFloat(el.dataset.tilt) || 3;
+    el.addEventListener('pointermove', e => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      el.classList.add('is-hover');
+      el.style.setProperty('--ry', (x * max * 2).toFixed(2) + 'deg');
+      el.style.setProperty('--rx', (-y * max * 2).toFixed(2) + 'deg');
+    });
+    el.addEventListener('pointerleave', () => {
+      el.classList.remove('is-hover');
+      el.style.setProperty('--rx', '0deg');
+      el.style.setProperty('--ry', '0deg');
+    });
+  });
+}
+
+if (typeof document !== 'undefined') avvia();
+if (typeof module !== 'undefined') module.exports = { calcola, pasqua, daISO, inISO, REGOLE };
+</script>
+</body>
+</html>
