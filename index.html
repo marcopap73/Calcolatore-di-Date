@@ -212,15 +212,18 @@
   .stat b { font-size: 26px; line-height: 1.1; color: var(--primary-strong); }
   .stat span { font-size: 13px; line-height: 1.3; color: var(--ink-2); }
   .detail { margin: 12px 0 0; font-size: 15px; color: var(--ink-2); }
-  .btn-primary {
-    width: 100%; margin-top: 12px; min-height: 54px; border: 0; border-radius: 16px;
-    background: var(--primary); color: #fff; font-weight: 700; font-size: 17px;
-    box-shadow: 0 5px 0 var(--primary-edge), 0 10px 20px -8px rgba(94,42,122,.5);
-    display: flex; align-items: center; justify-content: center; gap: 10px;
+  /* Data finale con il pulsantino "copia" a fianco */
+  .riga-data { display: flex; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .riga-data .big { margin: 0; flex: 1; min-width: 0; }
+  .copia-btn {
+    flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--primary-soft-edge);
+    background: #fff; color: var(--primary-strong); display: grid; place-items: center;
+    box-shadow: 0 3px 0 var(--primary-soft-edge);
     transition: transform .12s var(--ease), box-shadow .12s var(--ease), background .2s;
   }
-  .btn-primary:hover { background: var(--primary-strong); }
-  .btn-primary:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--primary-edge); }
+  .copia-btn:hover { background: var(--primary-soft); }
+  .copia-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--primary-soft-edge); }
+  .copia-btn.ok { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 3px 0 var(--primary-edge); }
   .result.err { background: var(--error-soft); border-color: #f3c5c0; box-shadow: 0 8px 0 #f3c5c0, var(--shadow-card); }
   .err-msg { margin: 8px 0 0; font-size: 17px; font-weight: 700; color: var(--error); display: flex; gap: 10px; align-items: flex-start; }
 
@@ -350,6 +353,8 @@
   </div>
 </main>
 
+<p class="sr-only" role="status" id="esitoCopia"></p>
+
 <div class="dock" id="dock">
   <div><small>Data risultante</small><strong id="dockDate"></strong></div>
   <button type="button" id="dockBtn">Vedi</button>
@@ -441,6 +446,7 @@ function calcola(opzioni) {
 
 /* ---------- 5) Interfaccia (il risultato si aggiorna da solo a ogni modifica) ---------- */
 const ICONA_COPIA = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+const ICONA_OK = '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
 const ICONA_FRECCIA = '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 const ICONA_AVVISO = '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg>';
 
@@ -500,7 +506,10 @@ function avvia() {
     out.innerHTML =
       '<h2 class="result-label">Data risultante</h2>' +
       '<p class="eyebrow">' + giorni + ' giorni dopo il ' + formatoBreve(partenza) + '</p>' +
-      '<p class="big" id="dataFinale">' + finale + '</p>' +
+      '<div class="riga-data">' +
+        '<p class="big" id="dataFinale">' + finale + '</p>' +
+        '<button type="button" class="copia-btn" id="copia" aria-label="Copia la data" title="Copia la data">' + ICONA_COPIA + '</button>' +
+      '</div>' +
       '<details class="dettagli" id="dettagli"' + (dettagliAperti ? ' open' : '') + '>' +
         '<summary>' + ICONA_FRECCIA + '<span>Mostra dettagli</span></summary>' +
         '<div class="stats">' +
@@ -509,8 +518,7 @@ function avvia() {
           '<div class="stat"><b>' + Math.abs(dist) + '</b><span>' + (dist === 0 ? 'è oggi' : dist > 0 ? 'giorni da oggi' : 'giorni fa') + '</span></div>' +
         '</div>' +
         '<p class="detail">' + (dettaglio ? 'Esclusi: ' + dettaglio + '.' : 'Nessun giorno escluso.') + '</p>' +
-      '</details>' +
-      '<button type="button" class="btn-primary" id="copia">' + ICONA_COPIA + '<span>Copia la data</span></button>';
+      '</details>';
     $('dockDate').textContent = finale;
     $('dettagli').addEventListener('toggle', e => {
       dettagliAperti = e.target.open;
@@ -518,10 +526,17 @@ function avvia() {
     });
     if (dettagliAperti) $('dettagli').querySelector('summary span').textContent = 'Nascondi dettagli';
     $('copia').onclick = () => {
-      const etichetta = $('copia').querySelector('span');
+      const btn = $('copia');
+      const esito = (icona, testo) => {
+        btn.innerHTML = icona;
+        btn.classList.toggle('ok', icona === ICONA_OK);
+        $('esitoCopia').textContent = testo;   // annuncio per i lettori di schermo
+        clearTimeout(btn._t);
+        btn._t = setTimeout(() => { btn.innerHTML = ICONA_COPIA; btn.classList.remove('ok'); }, 1800);
+      };
       (navigator.clipboard ? navigator.clipboard.writeText(finale) : Promise.reject()).then(
-        () => { etichetta.textContent = 'Data copiata'; },
-        () => { etichetta.textContent = 'Copia non riuscita'; });
+        () => esito(ICONA_OK, 'Data copiata'),
+        () => esito(ICONA_COPIA, 'Copia non riuscita'));
     };
   }
 
