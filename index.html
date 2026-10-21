@@ -5,8 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f5f2f9">
 <title>Calcolatore di date</title>
-<link rel="icon" href="logo.png">
-<link rel="apple-touch-icon" href="logo.png">
+<meta name="description" content="Calcola la data esatta dopo un certo numero di giorni, escludendo domeniche, festività, sabati e agosto.">
+<!-- App installabile (PWA): manifest, icone e service worker -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Calcola date">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Atkinson Hyperlegible: carattere progettato per la massima leggibilità -->
@@ -590,6 +595,11 @@ function attivaEffetto3D() {
 }
 
 if (typeof document !== 'undefined') avvia();
+
+/* Funzionamento senza internet e installazione come app (solo quando la pagina è online, non da file locale) */
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
 if (typeof module !== 'undefined') module.exports = { calcola, pasqua, daISO, inISO, REGOLE };
 </script>
 </body>
