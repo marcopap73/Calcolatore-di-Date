@@ -155,7 +155,7 @@
   .quick .tactile { min-height: 44px; font-size: 15px; border-radius: 12px; box-shadow: 0 3px 0 #ddd2e6; }
   .quick .tactile:active { box-shadow: 0 1px 0 #ddd2e6; }
   .quick .tactile[aria-pressed="true"] {
-    background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-soft-edge); box-shadow: 0 3px 0 var(--accent-soft-edge);
+    background: var(--primary-soft); color: var(--primary-strong); border-color: var(--accent-soft-edge); box-shadow: 0 3px 0 var(--accent-soft-edge);
   }
   .quick .tactile[aria-pressed="true"]:active { box-shadow: 0 1px 0 var(--accent-soft-edge); }
 
@@ -265,6 +265,170 @@
     *, *::before, *::after { transition: none !important; }
     .card3d { transform: none !important; }
   }
+
+  /* ============ Identità visiva Welfare Academy Italia ============ */
+  :root {
+    --bg: #f7f3fa;
+    --surface: #ffffff;
+    --ink: #251532;
+    --ink-2: #5c5065;
+    --line: #e4d9eb;
+    --primary: #743e91;
+    --primary-strong: #603276;
+    --primary-edge: #48245e;
+    --primary-soft: #f2eaf6;
+    --primary-soft-edge: #ddcce7;
+    --accent: #d4a12a;
+    --accent-ink: #3a2700;
+    --accent-edge: #8f6a12;
+    --accent-soft: #fbf0d4;
+    --accent-soft-edge: #ead08c;
+    --focus: #603276;
+    --radius: 22px;
+    --radius-sm: 14px;
+    --edge-card: 0 4px 0 #d9e6e9;
+    --shadow-card: 0 2px 5px rgba(16,47,64,.05), 0 16px 38px -22px rgba(16,47,64,.26);
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 85% 12%, rgba(116,62,145,.09), transparent 32rem),
+      var(--bg);
+  }
+  .topbar {
+    position: relative;
+    overflow: hidden;
+    padding: calc(22px + env(safe-area-inset-top)) 20px 22px;
+    background: linear-gradient(115deg, #4b235f, #713c8b 72%, #603276);
+    color: #fff;
+  }
+  .topbar::after {
+    content: "";
+    position: absolute;
+    width: 290px;
+    height: 290px;
+    right: max(4vw, calc((100vw - 1080px) / 2));
+    top: -205px;
+    border: 1px solid rgba(222,198,235,.34);
+    border-radius: 50%;
+    box-shadow: 0 0 0 28px rgba(222,198,235,.06), 0 0 0 58px rgba(222,198,235,.035);
+    pointer-events: none;
+  }
+  .topbar .in { position: relative; z-index: 1; max-width: 1120px; gap: 16px; }
+  .logo {
+    width: 58px; height: 58px;
+    border: 3px solid rgba(255,255,255,.92);
+    box-shadow: 0 0 0 5px rgba(255,255,255,.12);
+  }
+  .topbar h1 { color: #fff; font-size: clamp(23px, 3vw, 29px); letter-spacing: -.035em; }
+  .topbar p { color: #e4cfee; font-size: 14px; letter-spacing: .025em; }
+  .layout {
+    max-width: 1120px;
+    padding: 28px 20px calc(32px + env(safe-area-inset-bottom));
+    gap: 20px;
+  }
+  @media (min-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1.04fr) minmax(370px, .96fr); gap: 30px; padding-top: 32px; }
+    .result { top: 28px; }
+  }
+  .card3d { transform: none; }
+  .card3d.is-hover { --lift: -2px; transform: translateY(-2px); }
+  .card {
+    border-color: #dce8ea;
+    padding: 22px 22px 24px;
+    box-shadow: 0 3px 0 #dce8ea, 0 14px 34px -24px rgba(16,47,64,.3);
+  }
+  .card-head { gap: 13px; margin-bottom: 18px; }
+  .badge {
+    width: 38px; height: 38px; border-radius: 12px;
+    background: var(--primary); box-shadow: 0 3px 0 var(--primary-edge);
+  }
+  .badge.ocra { background: var(--accent); color: var(--accent-ink); box-shadow: 0 3px 0 var(--accent-edge); }
+  .card-head h2 { font-size: 19px; letter-spacing: -.02em; }
+  .input { border-color: #a6bac1; }
+  .input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(212,161,42,.2); }
+  .link-btn { color: var(--primary-strong); }
+  .link-btn:hover { background: var(--primary-soft); }
+  .tactile {
+    border-color: #dce8ea;
+    box-shadow: 0 3px 0 #dce8ea;
+    transition: transform .16s var(--ease), box-shadow .16s var(--ease), background .2s, border-color .2s;
+  }
+  .tactile:hover { background: var(--accent-soft); border-color: var(--accent-soft-edge); }
+  .tactile:active { box-shadow: 0 1px 0 #dce8ea; }
+  .quick .tactile[aria-pressed="true"] {
+    background: var(--primary-soft); color: var(--primary-strong);
+    border-color: var(--primary-soft-edge); box-shadow: 0 3px 0 var(--primary-soft-edge);
+  }
+  .switch-row { border-color: #dce8ea; box-shadow: 0 2px 0 #e7eff0; }
+  .switch-row:hover { background: #f7fbfb; }
+  .switch-row:has(.sw-input:checked) {
+    background: var(--primary-soft); border-color: var(--primary-soft-edge); box-shadow: 0 2px 0 var(--primary-soft-edge);
+  }
+  .sw-title.rosso { color: var(--primary-strong); }
+  .sw-track { border-color: #9bafb6; }
+  .sw-input:checked + .sw-track { background: var(--accent); border-color: var(--accent); }
+  .result {
+    overflow: hidden;
+    background: linear-gradient(145deg, #713c8b 0%, #4b235f 100%);
+    border: 1px solid #8b5ba1;
+    border-radius: 22px;
+    padding: 23px 24px 20px;
+    color: #fff;
+    box-shadow: 0 5px 0 #3e1d51, 0 18px 36px -16px rgba(67,31,85,.42);
+  }
+  .result::before {
+    content: "";
+    position: absolute;
+    width: 230px; height: 230px;
+    right: -120px; top: -140px;
+    border: 1px solid rgba(226,202,238,.36);
+    border-radius: 50%;
+    box-shadow: 0 0 0 22px rgba(226,202,238,.07), 0 0 0 46px rgba(226,202,238,.04);
+    pointer-events: none;
+  }
+  .result-label { position: relative; color: #ead8f2; letter-spacing: .09em; }
+  .eyebrow { color: #e2d1e9; }
+  .big { color: #fff; font-size: clamp(22px, 3vw, 28px); }
+  .riga-data { position: relative; margin-top: 10px; margin-bottom: 12px; gap: 12px; }
+  .copia-btn {
+    width: 42px; height: 42px;
+    border-color: rgba(255,255,255,.25); color: #fff;
+    background: rgba(255,255,255,.1); box-shadow: 0 3px 0 rgba(0,0,0,.18);
+  }
+  .copia-btn:hover { background: rgba(255,255,255,.2); }
+  .copia-btn.ok { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 3px 0 var(--accent-edge); }
+  .dettagli { position: relative; }
+  .dettagli summary { color: #ead8f2; }
+  .dettagli summary:hover { background: rgba(255,255,255,.1); }
+  .stat { border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.1); box-shadow: none; }
+  .stat b { color: #ead8f2; }
+  .stat span, .detail { color: #efe4f3; }
+  .result.err {
+    background: var(--error-soft); color: var(--ink);
+    border-color: #f3c5c0; box-shadow: 0 5px 0 #f3c5c0, var(--shadow-card);
+  }
+  .result.err .result-label, .result.err .big { color: var(--ink); }
+  .dock {
+    background: var(--accent); color: #073641;
+    box-shadow: 0 5px 0 var(--accent-edge), 0 16px 30px -10px rgba(7,54,65,.35);
+  }
+  .dock small { color: #4d3800; }
+  .dock button { color: #3a2700; }
+  footer { padding-top: 4px; color: var(--ink-2); }
+  footer strong { color: var(--primary-strong); }
+  @media (max-width: 600px) {
+    .topbar { padding-left: 18px; padding-right: 18px; }
+    .layout { padding: 18px 14px calc(26px + env(safe-area-inset-bottom)); gap: 16px; }
+    .card { padding: 18px 16px 20px; }
+    .result { padding: 20px 18px 18px; }
+    .quick { gap: 7px; }
+    .quick .tactile { font-size: 14px; }
+  }
+  @media (max-width: 360px) {
+    .card { padding: 15px 12px 17px; }
+    .result { padding: 18px 14px 16px; }
+  }
 </style>
 </head>
 <body>
@@ -303,7 +467,7 @@
           <label for="dataPartenza">Data di partenza</label>
           <button type="button" class="link-btn" id="oggi">Oggi</button>
         </div>
-        <input class="input" type="date" id="dataPartenza">
+        <input class="input" type="text" id="dataPartenza" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="gg/mm/aaaa">
       </div>
 
       <div class="field">
@@ -393,6 +557,17 @@ function formatoLungo(d) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 function formatoBreve(d) { return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }); }
+function inFormatoItaliano(d) {
+  const p = n => String(n).padStart(2, '0');
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
+}
+function daFormatoItaliano(s) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s.trim());
+  if (!m) return null;
+  const giorno = Number(m[1]), mese = Number(m[2]), anno = Number(m[3]);
+  const d = creaData(anno, mese - 1, giorno);
+  return d.getFullYear() === anno && d.getMonth() === mese - 1 && d.getDate() === giorno ? d : null;
+}
 
 /* ---------- 2) Festività italiane ---------- */
 function pasqua(anno) {        // algoritmo di Meeus/Jones/Butcher
@@ -493,12 +668,15 @@ function avvia() {
   function esegui() {
     const out = $('risultato');
     const giorni = parseInt($('giorni').value, 10);
-    if (!$('dataPartenza').value) return errore('Inserisci una data di partenza.');
+    if (!$('dataPartenza').value.trim()) return errore('Inserisci una data di partenza.');
+    const partenza = daFormatoItaliano($('dataPartenza').value);
+    if (!partenza) return errore('Inserisci una data valida nel formato gg/mm/aaaa.');
     if (!(giorni >= 1)) return errore('Inserisci un numero di giorni maggiore di zero.');
+
 
     const attive = {};
     caselle.forEach(id => attive[id] = $(id).checked);
-    const partenza = daISO($('dataPartenza').value);
+
     const r = calcola({ partenza, giorni, direzione, attive });
     if (r.errore) return errore(r.errore);
 
@@ -546,14 +724,14 @@ function avvia() {
 
   function aggiorna() { evidenziaRapido(); salva(); esegui(); }
 
-  $('dataPartenza').value = inISO(new Date());
+  $('dataPartenza').value = inFormatoItaliano(new Date());
   carica();
 
   $('quick').addEventListener('click', e => {
     const b = e.target.closest('[data-g]');
     if (b) { $('giorni').value = b.dataset.g; aggiorna(); }
   });
-  $('oggi').onclick = () => { $('dataPartenza').value = inISO(new Date()); aggiorna(); };
+  $('oggi').onclick = () => { $('dataPartenza').value = inFormatoItaliano(new Date()); aggiorna(); };
   caselle.forEach(id => $(id).addEventListener('change', aggiorna));
   $('giorni').addEventListener('input', aggiorna);
   $('dataPartenza').addEventListener('change', aggiorna);
